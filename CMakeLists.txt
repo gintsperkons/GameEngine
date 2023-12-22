@@ -12,7 +12,18 @@ endif()
 project ("GameEngine")
 
 # Add source to this project's executable.
-add_executable (GameEngine "GameEngine.cpp" "GameEngine.h")
+add_executable (GameEngine 
+"GameEngine/Engine/Core/Rendering/Vulkan/VulkanRenderer.cpp" 
+"GameEngine/Engine/Core/Rendering/Vulkan/VulkanRenderer.h"
+"GameEngine/Engine/Core/Window/WindowManager.cpp" 
+"GameEngine/Engine/Core/Window/WindowManager.h"
+ "GameEngine/Engine/Core/Window/Window.cpp" 
+ "GameEngine/Engine/Core/Window/Window.h" 
+ "GameEngine/Engine.cpp" 
+ "GameEngine/Engine/Core/Rendering/Renderer.h" 
+ "GameEngine/Engine/Core/Rendering/Renderer.cpp" 
+ "GameEngine/Engine/Core/Rendering/Vulkan/VulkanValidation.h" 
+ "GameEngine/Engine/Core/Rendering/Vulkan/VulkanValidation.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET GameEngine PROPERTY CXX_STANDARD 20)
