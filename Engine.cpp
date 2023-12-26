@@ -4,7 +4,7 @@
 #include "Engine.h"
 
 //Singleton instance creation storage and destraction
-Engine *instance;
+Engine *Engine::instance;
 
 Engine *Engine::GetInstance()
 {

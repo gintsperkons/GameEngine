@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for GameEngine, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.23)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -11,22 +11,56 @@ endif()
 
 project ("GameEngine")
 
-# Add source to this project's executable.
-add_executable (GameEngine 
-"GameEngine/Engine/Core/Rendering/Vulkan/VulkanRenderer.cpp" 
-"GameEngine/Engine/Core/Rendering/Vulkan/VulkanRenderer.h"
-"GameEngine/Engine/Core/Window/WindowManager.cpp" 
-"GameEngine/Engine/Core/Window/WindowManager.h"
- "GameEngine/Engine/Core/Window/Window.cpp" 
- "GameEngine/Engine/Core/Window/Window.h" 
- "GameEngine/Engine.cpp" 
- "GameEngine/Engine/Core/Rendering/Renderer.h" 
- "GameEngine/Engine/Core/Rendering/Renderer.cpp" 
- "GameEngine/Engine/Core/Rendering/Vulkan/VulkanValidation.h" 
- "GameEngine/Engine/Core/Rendering/Vulkan/VulkanValidation.cpp")
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET GameEngine PROPERTY CXX_STANDARD 20)
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(ARCH "x64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(ARCH "x86")
 endif()
+
+message("CMAKE_GENERATOR_PLATFORM is ${CMAKE_SIZEOF_VOID_P}")
+message("CMAKE_GENERATOR_PLATFORM is ${ARCH}")
+
+if(ARCH STREQUAL "x64")
+include_directories("${CMAKE_SOURCE_DIR}../Libraries/x64/include" "C:/VulkanSDK/1.3.261.1/Include")
+link_directories("${CMAKE_SOURCE_DIR}../Libraries/x64/lib" "C:/VulkanSDK/1.3.261.1/Lib")
+elseif(ARCH STREQUAL "x86")
+include_directories("${CMAKE_SOURCE_DIR}../Libraries/x86/include" "C:/VulkanSDK/1.3.261.1/Include")
+link_directories("${CMAKE_SOURCE_DIR}../Libraries/x86/lib" "C:/VulkanSDK/1.3.261.1/Lib32")
+endif()
+
+
+
+add_subdirectory("Engine")
+
+
+
+# Add source to this project's executable.
+add_library (${PROJECT_NAME}
+ "Engine.h" 
+ "Engine.cpp")
+ target_link_libraries(${PROJECT_NAME} Core vulkan-1 glfw3)
+ 
+  if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+ endif()
+ 
+
+
+
+ add_executable (${PROJECT_NAME}StandAlone
+ "Engine.h" 
+ "Engine.cpp"
+ "main.cpp")
+
+
+ target_link_libraries(${PROJECT_NAME}StandAlone Core vulkan-1 glfw3)
+ if (CMAKE_VERSION VERSION_GREATER 3.12)
+ set_property(TARGET ${PROJECT_NAME}StandAlone PROPERTY CXX_STANDARD 20)
+endif()
+
+
+
 
 # TODO: Add tests and install targets if needed.

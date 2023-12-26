@@ -19,6 +19,7 @@ class Engine
 
 
 		//Singleton instance creation and destraction
+		static Engine* instance;
 		static Engine *GetInstance();
 		static void DestroyInstance();
 };

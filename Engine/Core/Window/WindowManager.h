@@ -12,6 +12,7 @@ class Window;
 
 class WindowManager
 {
+
 	//Windows variables
 	std::map<std::string,Window*> allWindows;
 
@@ -35,6 +36,7 @@ class WindowManager
 		GLFWwindow *GetGLFWWindow(std::string wId);
 
 		//Singleton instance creation and destraction
+		static WindowManager* instance;
 		static WindowManager* GetInstance();
 		static void DestroyInstance();
 };

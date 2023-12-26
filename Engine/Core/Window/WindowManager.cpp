@@ -7,7 +7,7 @@
 #include "WindowManager.h"
 
 //Singleton instance creation storage and destraction
-WindowManager *instance;
+WindowManager *WindowManager::instance;
 
 WindowManager *WindowManager::GetInstance()
 {
@@ -51,7 +51,7 @@ void WindowManager::CreateWindow(std::string wId, std::string wName, const int w
 {
 	Window *newWindow = new Window();
 	newWindow->CreateWindow(wId, wName, width, height);
-	allWindows.insert(std::pair(wId, newWindow));
+	allWindows.insert(std::pair<std::string, Window *>(wId, newWindow));
 }
 
 //polls glfw events

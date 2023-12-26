@@ -3,6 +3,7 @@
 //Libraries
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 //Inbuilt
 #include <stdexcept>
 #include <vector>
@@ -36,6 +37,12 @@ class VulkanRenderer : public Renderer
 	
 	};
 
+	struct SwapChainImage
+	{
+		VkImage image;
+		VkImageView imageView;
+	};
+
 	//Vulkan validation layers
 	VkDebugUtilsMessengerEXT debugMessanger;
 	#ifdef NDEBUG
@@ -45,6 +52,7 @@ class VulkanRenderer : public Renderer
 	#endif
 
 	// Vulkan components
+		// - Main Components
 	VkInstance vulkanInstance;
 	struct
 	{
@@ -54,6 +62,14 @@ class VulkanRenderer : public Renderer
 	VkQueue graphicsQueue;
 	VkQueue presentationQueue;
 	VkSurfaceKHR surface;
+	VkSwapchainKHR swapchain;
+	std::vector<SwapChainImage> swapChainImages;
+
+
+	//Utility variables
+	VkFormat swapchainImageFormat;
+	VkExtent2D swapchainExtent;
+
 
 	// Vulkan functions
 	//-Create functions
@@ -61,6 +77,7 @@ class VulkanRenderer : public Renderer
 	void CreateLogicalDevice();
 	void CreateDebugCallback();
 	void CreateSurface();
+	void CreateSwapChain();
 
 	//-Destroy functions
 
@@ -79,6 +96,14 @@ class VulkanRenderer : public Renderer
 	QueueFamilyIndices GetQueueFamilies(VkPhysicalDevice device);
 	SwapChainDetails GetSwapChainDetails(VkPhysicalDevice device);
 
+	// --Choose Functions
+	VkSurfaceFormatKHR ChooseBestSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+	VkPresentModeKHR ChooseBestPresentationMode(const std::vector<VkPresentModeKHR> &availablePresentationModes);
+	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+
+	// --Create Functions
+	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
 	//----
 	// Window reference
 	GLFWwindow *window;
@@ -91,6 +116,7 @@ class VulkanRenderer : public Renderer
 
 protected:
 public:
+	VulkanRenderer();
 	int Init(GLFWwindow *newWindow);
 	void Draw();
 	void Update();

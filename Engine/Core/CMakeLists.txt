@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.23)
+project(Core VERSION 0.1.0)
+
+add_subdirectory(Window)
+add_subdirectory(Rendering)
+
+add_library(${PROJECT_NAME}
+$<TARGET_OBJECTS:Rendering>
+$<TARGET_OBJECTS:Vulkan>
+$<TARGET_OBJECTS:Window>
+)
+
+
+
+target_link_libraries(${PROJECT_NAME} vulkan-1 glfw3)

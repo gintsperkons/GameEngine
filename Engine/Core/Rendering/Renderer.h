@@ -12,4 +12,7 @@ class Renderer
 		virtual void Draw() = 0;
 		virtual void Update() = 0;
 		virtual void Destroy() = 0;
+
+		~Renderer(){};
+		Renderer(){};
 };
