@@ -1,4 +1,7 @@
+#Shader Compiled Spv files
+*.spv
 
+#---
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

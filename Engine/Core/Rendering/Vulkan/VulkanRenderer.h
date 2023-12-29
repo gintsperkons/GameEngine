@@ -78,6 +78,7 @@ class VulkanRenderer : public Renderer
 	void CreateDebugCallback();
 	void CreateSurface();
 	void CreateSwapChain();
+	void CreateGraphicsPipeline();
 
 	//-Destroy functions
 
@@ -103,6 +104,7 @@ class VulkanRenderer : public Renderer
 
 	// --Create Functions
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	VkShaderModule CreateShaderModule(const std::vector<char> &code);
 
 	//----
 	// Window reference
