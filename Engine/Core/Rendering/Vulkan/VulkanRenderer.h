@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <vector>
 #include <set>
+#include <array>
 //SourceCode
 #include "../Renderer.h"
 
@@ -66,6 +67,11 @@ class VulkanRenderer : public Renderer
 	std::vector<SwapChainImage> swapChainImages;
 
 
+	// - Pipeline
+	VkPipeline graphicsPipeline;
+	VkPipelineLayout pipelineLayout;
+	VkRenderPass renderPass;
+
 	//Utility variables
 	VkFormat swapchainImageFormat;
 	VkExtent2D swapchainExtent;
@@ -79,6 +85,7 @@ class VulkanRenderer : public Renderer
 	void CreateSurface();
 	void CreateSwapChain();
 	void CreateGraphicsPipeline();
+	void CreateRenderPass();
 
 	//-Destroy functions
 
