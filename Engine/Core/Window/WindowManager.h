@@ -27,6 +27,8 @@ class WindowManager
 		void PollEvents();
 		bool ShouldClose();
 
+		//Updates
+		void Draw();
 
 		//Checkers
 		bool HasAtleastOneWindow();

@@ -15,4 +15,10 @@ class Renderer
 
 		~Renderer(){};
 		Renderer(){};
+
+		enum RendererType
+		{
+			Vulkan,
+			OpenGL
+		};
 };

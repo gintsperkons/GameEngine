@@ -15,6 +15,7 @@ class Engine
 		
 		void Init();
 		void Update();
+		void Draw();
 		bool ShouldStop();
 
 

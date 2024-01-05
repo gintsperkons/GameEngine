@@ -15,6 +15,8 @@
 class Renderer;
 class VulkanRenderer : public Renderer
 {
+	const int MAX_FRAME_DRAWS = 2;
+	int currentFrame = 0;
 	const std::vector<const char *> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
@@ -65,6 +67,8 @@ class VulkanRenderer : public Renderer
 	VkSurfaceKHR surface;
 	VkSwapchainKHR swapchain;
 	std::vector<SwapChainImage> swapChainImages;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+	std::vector<VkCommandBuffer> commandBuffers;
 
 
 	// - Pipeline
@@ -72,9 +76,18 @@ class VulkanRenderer : public Renderer
 	VkPipelineLayout pipelineLayout;
 	VkRenderPass renderPass;
 
+	// - Pools
+	VkCommandPool commandPool;
+
 	//Utility variables
 	VkFormat swapchainImageFormat;
 	VkExtent2D swapchainExtent;
+
+	//Syncronisation 
+	std::vector<VkSemaphore> imageAvailable;
+	std::vector<VkSemaphore> renderFinished;
+	std::vector<VkFence> drawFences; // CPU-GPU syncronisation, wait until GPU is done with resource
+
 
 
 	// Vulkan functions
@@ -84,12 +97,16 @@ class VulkanRenderer : public Renderer
 	void CreateDebugCallback();
 	void CreateSurface();
 	void CreateSwapChain();
-	void CreateGraphicsPipeline();
 	void CreateRenderPass();
+	void CreateGraphicsPipeline();
+	void CreateFramebuffers();
+	void CreateCommandPool();
+	void CreateCommandBuffers();
+	void CreateSyncronisation();
 
-	//-Destroy functions
+	//-Record functions
+	void RecordCommands();
 
-	//-Get functions
 
 	//-Support functions
 	//--Checker Functions
@@ -99,8 +116,8 @@ class VulkanRenderer : public Renderer
 	bool CheckValidationLayerSupport(std::vector<const char*> *validationLayers);
 
 	// --Getter Functions
-	std::vector<const char *> GetInstanceExtensions(uint32_t *extensionCount);
 	void GetPhysicalDevice();
+	std::vector<const char *> GetInstanceExtensions(uint32_t *extensionCount);
 	QueueFamilyIndices GetQueueFamilies(VkPhysicalDevice device);
 	SwapChainDetails GetSwapChainDetails(VkPhysicalDevice device);
 

@@ -49,6 +49,10 @@ void Engine::Update()
 {	
 	WindowManager::GetInstance()->PollEvents();
 }
+void Engine::Draw()
+{
+	WindowManager::GetInstance()->Draw();
+}
 bool Engine::ShouldStop()
 {
 	return WindowManager::GetInstance()->ShouldClose();

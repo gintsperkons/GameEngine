@@ -1,9 +1,11 @@
+#include "Window.h"
 //Libraries
 //Inbuilt
 #include <stdexcept>
 //SourceCode
 #include "../Rendering/Vulkan/VulkanRenderer.h"
 #include "Window.h"
+#include <iostream>
 
 
 //<<<Privates
@@ -42,6 +44,11 @@ void Window::CreateWindow(std::string wId, std::string wName, const int width, c
 bool Window::WindowShouldClose()
 {	
 	return glfwWindowShouldClose(window);
+}
+
+void Window::Draw()
+{
+	renderer->Draw();
 }
 
 GLFWwindow *Window::GetGLFWWindow()

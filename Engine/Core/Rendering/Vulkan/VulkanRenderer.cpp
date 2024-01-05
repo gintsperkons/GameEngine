@@ -234,6 +234,87 @@ void VulkanRenderer::CreateSwapChain()
 	}
 }
 
+void VulkanRenderer::CreateRenderPass()
+{
+	//Attachment Descriptions
+	// Color attachment of render pass
+	VkAttachmentDescription colorAttachment = {};
+	colorAttachment.format = swapchainImageFormat;						// Format to use for attachment
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;						// Number of samples to write for multisampling
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// Describes what to do with attachment before rendering
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;				// Describes what to do with attachment after rendering
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// Describes what to do with stencil before rendering
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// Describes what to do with stencil after rendering
+
+	// Framebuffer data will be stored as an image, but images can be given different data layouts 
+	// to give optimal use for certain operations
+
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;			// Image data layout before render pass starts
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;		// Image data layout after render pass (to change to)
+
+
+	VkAttachmentReference colorAttachmentRef{};
+	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	// Information about a particular subpass the Render Pass is using
+	VkSubpassDescription subpass = {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;			// Pipeline type subpass is to be bound to
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorAttachmentRef;						// Reference to the color attachment idex in the attachment descriptions array
+    
+
+
+	//Need to determine when layout transitions occur using subpass dependencies
+	std::array<VkSubpassDependency, 2> subpassDependencies;
+
+	// Conversion from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	// Transition must happen after...
+	subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;								// Subpass index (VK_SUBPASS_EXTERNAL = Special value meaning outside of renderpass)
+	subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;				// Pipeline stage
+	subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;						// Stage access mask (memory access)
+	// But must happen before...
+	subpassDependencies[0].dstSubpass = 0;													// Destination Subpass (only one subpass for now)
+	subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// Pipeline stage
+	subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;	// Stage access mask (memory access)
+	subpassDependencies[0].dependencyFlags = 0;												// Flags
+
+
+	// Conversion from VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+	// Transition must happen after...
+	subpassDependencies[1].srcSubpass = VK_SUBPASS_EXTERNAL;								// Subpass index (VK_SUBPASS_EXTERNAL = Special value meaning outside of renderpass)
+	subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// Pipeline stage
+	subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;// Stage access mask (memory access)
+	// But must happen before...
+	subpassDependencies[1].dstSubpass = 0;													// Destination Subpass (only one subpass for now)
+	subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;				// Pipeline stage
+	subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;						// Stage access mask (memory access)
+	subpassDependencies[0].dependencyFlags = 0;												// Flags
+
+
+
+
+	// Create info for Render Pass
+	VkRenderPassCreateInfo renderPassCreateInfo = {};
+	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassCreateInfo.attachmentCount = 1;
+	renderPassCreateInfo.pAttachments = &colorAttachment;
+	renderPassCreateInfo.subpassCount = 1;
+	renderPassCreateInfo.pSubpasses = &subpass;
+	renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
+	renderPassCreateInfo.pDependencies = subpassDependencies.data();
+
+	VkResult result = vkCreateRenderPass(mainDevice.logicalDevice, &renderPassCreateInfo, nullptr, &renderPass);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create a Render Pass!");
+	}
+
+
+
+
+}
+
 void VulkanRenderer::CreateGraphicsPipeline()
 {
 	std::vector<char> vertexShaderCode = FileHandling::ReadBinaryFile("Shaders/vert.spv");
@@ -418,86 +499,152 @@ void VulkanRenderer::CreateGraphicsPipeline()
 
 }
 
-void VulkanRenderer::CreateRenderPass()
+void VulkanRenderer::CreateFramebuffers()
 {
-	//Attachment Descriptions
-	// Color attachment of render pass
-	VkAttachmentDescription colorAttachment = {};
-	colorAttachment.format = swapchainImageFormat;						// Format to use for attachment
-	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;						// Number of samples to write for multisampling
-	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;				// Describes what to do with attachment before rendering
-	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;				// Describes what to do with attachment after rendering
-	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;		// Describes what to do with stencil before rendering
-	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;	// Describes what to do with stencil after rendering
+	// Resize framebuffer count to equal swap chain image count
+	swapChainFramebuffers.resize(swapChainImages.size());
 
-	// Framebuffer data will be stored as an image, but images can be given different data layouts 
-	// to give optimal use for certain operations
+	// Create a framebuffer for each swap chain image
+	for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
+	{
+		std::array<VkImageView, 1> attachments = {
+			swapChainImages[i].imageView
+		};
 
-	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;			// Image data layout before render pass starts
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;		// Image data layout after render pass (to change to)
+		VkFramebufferCreateInfo framebufferCreateInfo = {};
+		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferCreateInfo.renderPass = renderPass;							// Render Pass layout the Framebuffer will be used with
+		framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		framebufferCreateInfo.pAttachments = attachments.data();				// List of attachments (1:1 with Render Pass)
+		framebufferCreateInfo.width = swapchainExtent.width;					// Framebuffer width
+		framebufferCreateInfo.height = swapchainExtent.height;					// Framebuffer height
+		framebufferCreateInfo.layers = 1;										// Framebuffer layers
 
+		VkResult result = vkCreateFramebuffer(mainDevice.logicalDevice, &framebufferCreateInfo, nullptr, &swapChainFramebuffers[i]);
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create a Framebuffer!");
+		}
+	}
+}
 
-	VkAttachmentReference colorAttachmentRef{};
-	colorAttachmentRef.attachment = 0;
-	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+void VulkanRenderer::CreateCommandPool()
+{
+	// Get indices of queue families from device
+	QueueFamilyIndices queueFamilyIndices = GetQueueFamilies(mainDevice.physicalDevice);
 
-	// Information about a particular subpass the Render Pass is using
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;			// Pipeline type subpass is to be bound to
-	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &colorAttachmentRef;						// Reference to the color attachment idex in the attachment descriptions array
-    
+	VkCommandPoolCreateInfo poolCreateInfo = {};
+	poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Reset command buffers when pool is reset
+	poolCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;	// Queue family type that buffers from this command pool will use
 
-
-	//Need to determine when layout transitions occur using subpass dependencies
-	std::array<VkSubpassDependency, 2> subpassDependencies;
-
-	// Conversion from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	// Transition must happen after...
-	subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;								// Subpass index (VK_SUBPASS_EXTERNAL = Special value meaning outside of renderpass)
-	subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;				// Pipeline stage
-	subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;						// Stage access mask (memory access)
-	// But must happen before...
-	subpassDependencies[0].dstSubpass = 0;													// Destination Subpass (only one subpass for now)
-	subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// Pipeline stage
-	subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;	// Stage access mask (memory access)
-	subpassDependencies[0].dependencyFlags = 0;												// Flags
-
-
-	// Conversion from VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-	// Transition must happen after...
-	subpassDependencies[1].srcSubpass = VK_SUBPASS_EXTERNAL;								// Subpass index (VK_SUBPASS_EXTERNAL = Special value meaning outside of renderpass)
-	subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;	// Pipeline stage
-	subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;// Stage access mask (memory access)
-	// But must happen before...
-	subpassDependencies[1].dstSubpass = 0;													// Destination Subpass (only one subpass for now)
-	subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;				// Pipeline stage
-	subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;						// Stage access mask (memory access)
-	subpassDependencies[0].dependencyFlags = 0;												// Flags
-
-
-
-
-	// Create info for Render Pass
-	VkRenderPassCreateInfo renderPassCreateInfo = {};
-	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassCreateInfo.attachmentCount = 1;
-	renderPassCreateInfo.pAttachments = &colorAttachment;
-	renderPassCreateInfo.subpassCount = 1;
-	renderPassCreateInfo.pSubpasses = &subpass;
-	renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies.size());
-	renderPassCreateInfo.pDependencies = subpassDependencies.data();
-
-	VkResult result = vkCreateRenderPass(mainDevice.logicalDevice, &renderPassCreateInfo, nullptr, &renderPass);
+	VkResult result = vkCreateCommandPool(mainDevice.logicalDevice, &poolCreateInfo, nullptr, &commandPool);
 	if (result != VK_SUCCESS)
 	{
-		throw std::runtime_error("Failed to create a Render Pass!");
+		throw std::runtime_error("Failed to create a Command Pool!");
+	}
+}
+
+void VulkanRenderer::CreateCommandBuffers()
+{
+	// Resize command buffer count to have one for each framebuffer
+	commandBuffers.resize(swapChainFramebuffers.size());
+	
+
+	VkCommandBufferAllocateInfo commandBufferAllocInfo = {};
+	commandBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocInfo.commandPool = commandPool;
+	commandBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; // VK_COMMAND_BUFFER_LEVEL_PRIMARY : Buffer you submit directly to queue. Cant be called by other buffers.
+																	// VK_COMMAND_BUFFER_LEVEL_SECONDARY : Buffer can't be called directly. Can be called from other buffers via "vkCmdExecuteCommands" when recording commands in primary buffer.
+	commandBufferAllocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+	VkResult result = vkAllocateCommandBuffers(mainDevice.logicalDevice, &commandBufferAllocInfo, commandBuffers.data());
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to allocate Command Buffers!");
+	}
+}
+
+void VulkanRenderer::CreateSyncronisation()
+{
+	imageAvailable.resize(MAX_FRAME_DRAWS);
+	renderFinished.resize(MAX_FRAME_DRAWS);
+	drawFences.resize(MAX_FRAME_DRAWS);
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceCreateInfo = {};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
+	{
+
+		if (vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &imageAvailable[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(mainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &renderFinished[i]) != VK_SUCCESS ||
+			vkCreateFence(mainDevice.logicalDevice, &fenceCreateInfo, nullptr, &drawFences[i]) != VK_SUCCESS
+			)
+		{
+			throw std::runtime_error("Failed to create a Semaphore and/or Fence!");
+		}
 	}
 
 
 
-
 }
+	//<==Record functions
+void VulkanRenderer::RecordCommands()
+{
+	// Information about how to begin each command buffer
+	VkCommandBufferBeginInfo bufferBeginInfo = {};
+	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT; // Buffer can be resubmitted when it has already been submitted and is awaiting execution
+
+
+	// Information about how to begin a render pass (only needed for graphical applications)
+	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.renderPass = renderPass; // Render Pass to begin
+	renderPassBeginInfo.renderArea.offset = { 0, 0 }; // Start point of render pass in pixels
+	renderPassBeginInfo.renderArea.extent = swapchainExtent; // Size of region to run render pass on (starting at offset)
+	VkClearValue clearValues[] = {
+		{0.6f, 0.65f, 0.4f, 1.0f}
+	};
+	renderPassBeginInfo.pClearValues = clearValues; // List of clear values (TODO: depth attachment clear value)
+	renderPassBeginInfo.clearValueCount = 1; // Number of clear values to use
+
+	for (size_t i = 0; i < commandBuffers.size(); i++)
+	{
+		// Start recording commands to command buffer!
+		VkResult result = vkBeginCommandBuffer(commandBuffers[i], &bufferBeginInfo);
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to start recording a Command Buffer!");
+		}
+
+
+		renderPassBeginInfo.framebuffer = swapChainFramebuffers[i]; // Swapchain framebuffer to bind to render pass
+			//Begin Render Pass
+			vkCmdBeginRenderPass(commandBuffers[i],&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+
+				// Bind Pipeline to be used in render pass
+				vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline); // Bind graphics pipeline
+
+				// Execute pipeline
+				vkCmdDraw(commandBuffers[i], 3, 1, 0, 0); // Draw triangle
+
+			//End the render pass
+			vkCmdEndRenderPass(commandBuffers[i]);
+
+		result = vkEndCommandBuffer(commandBuffers[i]);
+		if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to stop recording a Command Buffer!");
+		}
+	}
+};
+	//==>Record functions
 
 //-->Create Functions
 
@@ -888,6 +1035,11 @@ int VulkanRenderer::Init(GLFWwindow *newWindow)
 		CreateSwapChain();
 		CreateRenderPass();
 		CreateGraphicsPipeline();
+		CreateFramebuffers();
+		CreateCommandPool();
+		CreateCommandBuffers();
+		RecordCommands();
+		CreateSyncronisation();
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -901,7 +1053,64 @@ VulkanRenderer::VulkanRenderer()
 {}
 
 void VulkanRenderer::Draw()
-{}
+{
+
+	//Wait for given fence to signal (open) from last draw before continuing
+	vkWaitForFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+	//Manually reset (close) fences
+	vkResetFences(mainDevice.logicalDevice, 1, &drawFences[currentFrame]);
+
+
+	// 1. Get next image to draw to and set something to signal when we're finished with the image (a semaphore)
+	// 2. Submit command buffer to queue for execution, making sure it waits for the image to be signalled as available before drawing
+	// and signals when it has finished rendering
+	// 3. Present image to screen when it has signalled finished rendering
+	
+
+
+	//Get next available
+	uint32_t imageIndex;
+	vkAcquireNextImageKHR(mainDevice.logicalDevice, swapchain, std::numeric_limits<uint64_t>::max(), imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	
+
+	//Submit command buffer to render
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1; // Number of semaphores to wait on
+	submitInfo.pWaitSemaphores = &imageAvailable[currentFrame]; // List of semaphores to wait on
+	VkPipelineStageFlags waitStages[] = {
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+	};
+	submitInfo.pWaitDstStageMask = waitStages; // Stages to check semaphores at
+	submitInfo.commandBufferCount = 1; // Number of command buffers to submit
+	submitInfo.pCommandBuffers = &commandBuffers[imageIndex]; // Command buffer to submit
+	submitInfo.signalSemaphoreCount = 1; // Number of semaphores to signal
+	submitInfo.pSignalSemaphores = &renderFinished[currentFrame]; // Semaphores to signal when command buffer finishes
+
+	VkResult result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, drawFences[currentFrame]);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to submit a Command Buffer to Queue!");
+	}
+
+	//Present rendered image to screen
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1; // Number of semaphores to wait on
+	presentInfo.pWaitSemaphores = &renderFinished[currentFrame]; // Semaphores to wait on
+	presentInfo.swapchainCount = 1; // Number of swapchains to present to
+	presentInfo.pSwapchains = &swapchain; // Swapchains to present images to
+	presentInfo.pImageIndices = &imageIndex; // Index of images in swapchains to present
+
+	result = vkQueuePresentKHR(presentationQueue, &presentInfo);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to present Image!");
+	}
+
+	// Get next frame (use % MAX_FRAME_DRAWS to keep value below MAX_FRAME_DRAWS)
+	currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
+}
 
 void VulkanRenderer::Update()
 {}
@@ -911,6 +1120,18 @@ void VulkanRenderer::Destroy()
 
 void VulkanRenderer::CleanUp()
 {
+	vkDeviceWaitIdle(mainDevice.logicalDevice);
+	for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
+	{
+		vkDestroySemaphore(mainDevice.logicalDevice, renderFinished[i], nullptr);
+		vkDestroySemaphore(mainDevice.logicalDevice, imageAvailable[i], nullptr);
+		vkDestroyFence(mainDevice.logicalDevice, drawFences[i], nullptr);
+	}
+	vkDestroyCommandPool(mainDevice.logicalDevice, commandPool, nullptr);
+	for (auto framebuffer : swapChainFramebuffers)
+	{
+		vkDestroyFramebuffer(mainDevice.logicalDevice, framebuffer, nullptr);
+	}
 	vkDestroyPipeline(mainDevice.logicalDevice, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(mainDevice.logicalDevice, pipelineLayout, nullptr);
 	vkDestroyRenderPass(mainDevice.logicalDevice, renderPass, nullptr);

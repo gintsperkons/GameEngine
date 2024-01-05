@@ -20,6 +20,7 @@ class Window
 	public:
 		void CreateWindow(std::string wId, std::string wName = "Base Window", const int width = 800, const int height = 600);
 		bool WindowShouldClose();
+		void Draw();
 		GLFWwindow *GetGLFWWindow();
 		void CloseWindow();
 		~Window();

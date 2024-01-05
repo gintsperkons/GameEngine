@@ -1,3 +1,4 @@
+#include "WindowManager.h"
 //Libraries
 #include <GLFW/glfw3.h>
 //Inbuilt
@@ -79,6 +80,13 @@ bool WindowManager::ShouldClose()
 	}
 
 	return shouldClose;
+}
+void WindowManager::Draw()
+{
+	for (std::map<std::string, Window *>::iterator it = allWindows.begin(); it != allWindows.end(); ++it)
+	{
+		it->second->Draw();
+	}
 }
 //>>>Publics
 
