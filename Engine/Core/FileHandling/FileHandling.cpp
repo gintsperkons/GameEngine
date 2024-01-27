@@ -1,8 +1,6 @@
-#pragma once
-
-//Libraries
-//Inbuilt
-//SourceCode
+// Libraries
+// Inbuilt
+// SourceCode
 #include "FileHandling.h"
 #include <iostream>
 
@@ -20,11 +18,29 @@ std::vector<char> FileHandling::ReadBinaryFile(const std::string FileName)
 	size_t fileSize = (size_t)file.tellg();
 	std::vector<char> fileBuffer(fileSize);
 
-	//Go to the beginning of the file and read all the bytes at once
+	// Go to the beginning of the file and read all the bytes at once
 	file.seekg(0);
 	file.read(fileBuffer.data(), fileSize);
 
 	file.close();
-	
+
 	return fileBuffer;
+}
+
+std::string FileHandling::ReadFile(const std::string FileName)
+{
+	std::string fileContents;
+	std::string line;
+	std::ifstream myfile(FileName);
+	if (myfile.is_open())
+	{
+		while (getline(myfile, line))
+		{
+			fileContents += line + "\n";
+			std::cout << line << '\n';
+		}
+		myfile.close();
+	}
+
+	return fileContents;
 }

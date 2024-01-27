@@ -9,6 +9,7 @@
 class Renderer;
 class Window
 {		
+		int rendererType;
 		std::string wId;
 		GLFWwindow *window;
 		Renderer* renderer;

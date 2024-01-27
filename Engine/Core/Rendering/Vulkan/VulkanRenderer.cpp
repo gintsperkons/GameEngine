@@ -1040,7 +1040,7 @@ VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<char> &code)
 
 VulkanRenderer::~VulkanRenderer()
 {
-	CleanUp();
+	Destroy();
 }
 //>>>Privates
 
@@ -1155,7 +1155,9 @@ void VulkanRenderer::Update()
 {}
 
 void VulkanRenderer::Destroy()
-{}
+{
+	CleanUp();
+}
 
 void VulkanRenderer::CleanUp()
 {

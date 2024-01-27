@@ -18,6 +18,7 @@ class Renderer
 
 		enum RendererType
 		{
+			None,
 			Vulkan,
 			OpenGL
 		};

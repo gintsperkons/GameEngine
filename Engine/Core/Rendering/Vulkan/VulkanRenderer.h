@@ -12,6 +12,7 @@
 #include <array>
 //SourceCode
 #include "Mesh.h"
+#include "../RendererStructures.h"
 #include "Utilities.h"
 #include "../Renderer.h"
 

@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME}
 $<TARGET_OBJECTS:FileHandling>
 $<TARGET_OBJECTS:Rendering>
 $<TARGET_OBJECTS:Vulkan>
+$<TARGET_OBJECTS:OpenGL>
 $<TARGET_OBJECTS:Window>
 )
 

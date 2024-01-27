@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <vector>
 //SourceCode
+#include "../RendererStructures.h"
 #include "Utilities.h"
 
 class Mesh

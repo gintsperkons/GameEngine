@@ -10,4 +10,5 @@ class FileHandling
 {
 	public:
 		static std::vector<char> ReadBinaryFile(const std::string FileName);
+		static std::string ReadFile(const std::string FileName);
 };

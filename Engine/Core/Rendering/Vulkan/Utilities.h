@@ -27,12 +27,7 @@
 		}
 	};
 
-	//Vertex data representation
-	struct Vertex 
-	{
-		glm::vec3 pos; // Vertex position (x, y, z)
-		glm::vec3 col; // Vertex colour (r, g, b)
-	};
+	
 
 	struct SwapChainDetails
 	{

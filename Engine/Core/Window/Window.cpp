@@ -1,12 +1,12 @@
 #include "Window.h"
-//Libraries
-//Inbuilt
+// Libraries
+// Inbuilt
 #include <stdexcept>
-//SourceCode
+// SourceCode
 #include "../Rendering/Vulkan/VulkanRenderer.h"
+#include "../Rendering/OpenGL/OpenGLRenderer.h"
 #include "Window.h"
 #include <iostream>
-
 
 //<<<Privates
 void Window::InitWindow(std::string wName, const int width, const int height)
@@ -15,34 +15,59 @@ void Window::InitWindow(std::string wName, const int width, const int height)
 	if (!glfwInit())
 		throw std::runtime_error("Failed to initialise GLFW");
 
-	// Set GLFW to not work with OpenGL
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	if (rendererType == Renderer::RendererType::Vulkan)
+	{
+		// Set GLFW to not work with OpenGL
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	}
+	else if (rendererType == Renderer::RendererType::OpenGL)
+	{
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	}
 
 	window = glfwCreateWindow(width, height, wName.c_str(), nullptr, nullptr);
+	if (window == NULL)
+    {
+		throw std::runtime_error("Failed to create GLFW window");
+        glfwTerminate();
+    }
+	glfwMakeContextCurrent(window);
 }
 void Window::InitRenderer()
 {
-	// Create Vulkan Renderer instance
-	renderer = new VulkanRenderer();
-	if (renderer->Init(window) == EXIT_FAILURE)
-		throw std::runtime_error("Failed to initialise Vulkan Renderer");
-		
-
-
+	// Create Renderer instance
+	if (rendererType == Renderer::RendererType::Vulkan)
+	{
+		renderer = new VulkanRenderer();
+		if (renderer->Init(window) == EXIT_FAILURE)
+			throw std::runtime_error("Failed to initialise Vulkan Renderer");
+	}
+	else if (rendererType == Renderer::RendererType::OpenGL)
+	{
+		renderer = new OpenGLRenderer();
+		if (renderer->Init(window) == EXIT_FAILURE)
+			throw std::runtime_error("Failed to initialise OpenGL Renderer");
+	}
 }
 //>>>Privates
 
 //<<<Publics
 void Window::CreateWindow(std::string wId, std::string wName, const int width, const int height)
-{	
+{
 	this->wId = wId;
+
+	// Set renderer type
+	rendererType = Renderer::RendererType::OpenGL;
+
 	InitWindow(wName, width, height);
 	InitRenderer();
 }
 
 bool Window::WindowShouldClose()
-{	
+{
 	return glfwWindowShouldClose(window);
 }
 
@@ -58,6 +83,7 @@ GLFWwindow *Window::GetGLFWWindow()
 
 void Window::CloseWindow()
 {
+	delete renderer;
 	glfwDestroyWindow(window);
 }
 
@@ -66,7 +92,6 @@ Window::~Window()
 	CloseWindow();
 }
 //>>>Publics
-
 
 //<<<Getters
 std::string Window::GetID()
