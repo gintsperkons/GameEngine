@@ -1,6 +1,7 @@
 #pragma once
 //Libraries
 #include <GLFW/glfw3.h>
+#include <GLM/glm.hpp>
 //Inbuilt
 #include <string>
 //SourceCode
@@ -13,6 +14,7 @@ class Window
 		std::string wId;
 		GLFWwindow *window;
 		Renderer* renderer;
+		glm::vec4 clearColor;
 
 		void InitWindow(std::string wName, const int width, const int height);
 		void InitRenderer();
@@ -27,6 +29,7 @@ class Window
 		~Window();
 		//Getters
 		std::string GetID();
+		glm::vec4 GetClearColor();
 		//Setters
 		void SetTitle(std::string newTitle);
 };

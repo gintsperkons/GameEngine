@@ -7,6 +7,7 @@
 #include "VulkanRenderer.h"
 #include "VulkanValidation.h"
 #include "../../FileHandling/FileHandling.h"
+#include "../../Window/Window.h"
 
 
 //<<<Privates
@@ -314,8 +315,8 @@ void VulkanRenderer::CreateRenderPass()
 
 void VulkanRenderer::CreateGraphicsPipeline()
 {
-	std::vector<char> vertexShaderCode = FileHandling::ReadBinaryFile("Shaders/vert.spv");
-	std::vector<char> fragmentShaderCode = FileHandling::ReadBinaryFile("Shaders/frag.spv");
+	std::vector<char> vertexShaderCode = FileHandling::ReadBinaryFile("Shaders/Vulkan/base.vert.spv");
+	std::vector<char> fragmentShaderCode = FileHandling::ReadBinaryFile("Shaders/Vulkan/base.frag.spv");
 
 	// Build Shader Modules to link to Graphics Pipeline
 
@@ -628,7 +629,7 @@ void VulkanRenderer::RecordCommands()
 	renderPassBeginInfo.renderArea.offset = { 0, 0 }; // Start point of render pass in pixels
 	renderPassBeginInfo.renderArea.extent = swapchainExtent; // Size of region to run render pass on (starting at offset)
 	VkClearValue clearValues[] = {
-		{0.6f, 0.65f, 0.4f, 1.0f}
+		{clearColor.r,clearColor.g,clearColor.b,clearColor.a}
 	};
 	renderPassBeginInfo.pClearValues = clearValues; // List of clear values (TODO: depth attachment clear value)
 	renderPassBeginInfo.clearValueCount = 1; // Number of clear values to use
@@ -1048,6 +1049,8 @@ VulkanRenderer::~VulkanRenderer()
 int VulkanRenderer::Init(GLFWwindow *newWindow)
 {
 	this->window = newWindow;
+	Window* windowClass =  (Window *)glfwGetWindowUserPointer(window);
+	clearColor = windowClass->GetClearColor();
 
 	try
 	{

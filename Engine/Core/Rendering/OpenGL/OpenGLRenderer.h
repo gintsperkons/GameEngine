@@ -9,6 +9,9 @@ class GLMesh;
 class Renderer;
 class OpenGLRenderer : public Renderer
 {
+//Render Setting
+glm::vec4 clearColor;
+
 GLMesh firstMesh;
 ~OpenGLRenderer();
 unsigned int shaderProgram;

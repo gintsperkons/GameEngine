@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 // SourceCode
+#include "../../Window/Window.h"
 #include "../../FileHandling/FileHandling.h"
 #include "../RendererStructures.h"
 #include "OpenGLRenderer.h"
@@ -21,8 +22,13 @@ int OpenGLRenderer::Init(GLFWwindow *window)
         {
             throw std::runtime_error("Failed to initialize GLAD!");
         }
+        int width, height;
+        //get Windows data
+        Window* windowClass = (Window*)glfwGetWindowUserPointer(window);
+        clearColor = windowClass->GetClearColor();
 
-        glViewport(0, 0, 800, 600);
+        glfwGetFramebufferSize(window, &width, &height);
+        glViewport(0, 0, width, height);
 
         std::vector<Vertex> meshVertices = {
             {{0.4, -0.4, 0.0}, {1.0, 0.0, 0.0}},
@@ -35,8 +41,8 @@ int OpenGLRenderer::Init(GLFWwindow *window)
         };
         firstMesh = GLMesh(&meshVertices);
 
-    std::string vertexShaderSourceString =  FileHandling::ReadFile("Shaders/base.vert");
-    std::string fragmentShaderSourceString = FileHandling::ReadFile("Shaders/base.frag");
+    std::string vertexShaderSourceString =  FileHandling::ReadFile("Shaders/OpenGL/base.vert");
+    std::string fragmentShaderSourceString = FileHandling::ReadFile("Shaders/OpenGL/base.frag");
 
     const char* vertexShaderSource = vertexShaderSourceString.c_str();
     const char* fragmentShaderSource = fragmentShaderSourceString.c_str();
@@ -97,7 +103,7 @@ void OpenGLRenderer::Draw()
 {
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle

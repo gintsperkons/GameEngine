@@ -23,8 +23,8 @@ void Window::InitWindow(std::string wName, const int width, const int height)
 	}
 	else if (rendererType == Renderer::RendererType::OpenGL)
 	{
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	}
 
@@ -35,6 +35,7 @@ void Window::InitWindow(std::string wName, const int width, const int height)
         glfwTerminate();
     }
 	glfwMakeContextCurrent(window);
+	glfwSetWindowUserPointer(window, this);
 }
 void Window::InitRenderer()
 {
@@ -59,8 +60,9 @@ void Window::CreateWindow(std::string wId, std::string wName, const int width, c
 {
 	this->wId = wId;
 
-	// Set renderer type
-	rendererType = Renderer::RendererType::OpenGL;
+	// Set renderer data and type
+	rendererType = Renderer::RendererType::Vulkan;
+	clearColor = glm::vec4(0.4f, 0.4f, 1.0f, 1.0f);
 
 	InitWindow(wName, width, height);
 	InitRenderer();
@@ -97,6 +99,10 @@ Window::~Window()
 std::string Window::GetID()
 {
 	return wId;
+}
+glm::vec4 Window::GetClearColor()
+{
+    return clearColor;
 }
 //>>>Getters
 

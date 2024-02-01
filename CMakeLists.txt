@@ -23,11 +23,11 @@ message("CMAKE_GENERATOR_PLATFORM is ${CMAKE_SIZEOF_VOID_P}")
 message("CMAKE_GENERATOR_PLATFORM is ${ARCH}")
 
 if(ARCH STREQUAL "x64")
-include_directories("${CMAKE_SOURCE_DIR}../Libraries/x64/include" "C:/VulkanSDK/1.3.261.1/Include")
-link_directories("${CMAKE_SOURCE_DIR}../Libraries/x64/lib" "C:/VulkanSDK/1.3.261.1/Lib")
+include_directories("${CMAKE_SOURCE_DIR}/Libraries/x64/include" "C:/VulkanSDK/1.3.261.1/Include")
+link_directories("${CMAKE_SOURCE_DIR}/Libraries/x64/lib" "C:/VulkanSDK/1.3.261.1/Lib")
 elseif(ARCH STREQUAL "x86")
-include_directories("${CMAKE_SOURCE_DIR}../Libraries/x86/include" "C:/VulkanSDK/1.3.261.1/Include")
-link_directories("${CMAKE_SOURCE_DIR}../Libraries/x86/lib" "C:/VulkanSDK/1.3.261.1/Lib32")
+include_directories("${CMAKE_SOURCE_DIR}/Libraries/x86/include" "C:/VulkanSDK/1.3.261.1/Include")
+link_directories("${CMAKE_SOURCE_DIR}/Libraries/x86/lib" "C:/VulkanSDK/1.3.261.1/Lib32")
 endif()
 
 

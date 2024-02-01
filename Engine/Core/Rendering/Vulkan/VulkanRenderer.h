@@ -19,6 +19,9 @@
 class Renderer;
 class VulkanRenderer : public Renderer
 {
+	//Render Setting
+	glm::vec4 clearColor;
+
 	int currentFrame = 0;
 
 	//Vulkan validation layers
