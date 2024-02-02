@@ -6,10 +6,13 @@
 #include <string>
 //SourceCode
 #include "../Rendering/Renderer.h"
+#include "../InputHandling/InputHandling.h"
 
+class InputHandling;
 class Renderer;
-class Window
-{		
+class Window : public InputHandling
+{	
+
 		int rendererType;
 		std::string wId;
 		GLFWwindow *window;
@@ -24,12 +27,15 @@ class Window
 		void CreateWindow(std::string wId, std::string wName = "Base Window", const int width = 800, const int height = 600);
 		bool WindowShouldClose();
 		void Draw();
+		void PollEvents();
 		GLFWwindow *GetGLFWWindow();
+		void ChangeRenderer(int newRendererType);
 		void CloseWindow();
 		~Window();
 		//Getters
 		std::string GetID();
 		glm::vec4 GetClearColor();
+		char GetKeyState(int key);
 		//Setters
 		void SetTitle(std::string newTitle);
 };

@@ -6,6 +6,7 @@
 #include <vector>
 //SourceCode
 #include "WindowManager.h"
+#include "../InputHandling/InputHandling.h"
 
 //Singleton instance creation storage and destraction
 WindowManager *WindowManager::instance;
@@ -58,7 +59,10 @@ void WindowManager::CreateWindow(std::string wId, std::string wName, const int w
 //polls glfw events
 void WindowManager::PollEvents()
 {
-	glfwPollEvents();
+	for (std::map<std::string, Window *>::iterator it = allWindows.begin(); it != allWindows.end(); ++it)
+	{
+		it->second->PollEvents();
+	}
 }
 
 bool WindowManager::ShouldClose()
